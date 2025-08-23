@@ -9,13 +9,15 @@ include_directories(
     third_party/glfw/include
     third_party/glad/include
     third_party/glm
+    src
 )
 
 add_executable(cube
     src/main.cpp
-    third_party/glad/src/glac.c
+    third_party/glad/src/gl.c
 )
 
 target_link_libraries(cube
     glfw
 )
+
