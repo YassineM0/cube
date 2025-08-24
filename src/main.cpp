@@ -3,8 +3,9 @@
 #include <chrono>
 #include <iostream>
 
-#include "Shader.h"
-#include "Mesh.h"
+#include "shaders/Shader.h"
+#include "mesh/Mesh.h"
+#include "mesh/Cube.h"
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
 
@@ -31,26 +32,30 @@ int main() {
 
     glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
 
-    Shader shader("../src/shader.vert", "../src/shader.frag");
+    Shader shader("../src/shaders/shader.vert", "../src/shaders/shader.frag");
 
-    const int NUM_TRIANGLES = 1000;
-    float vertices[NUM_TRIANGLES * 9];
-    for (int i = 0; i < NUM_TRIANGLES * 9; ++i)
-        vertices[i] = ((rand() % 2000) / 1000.0f) - 1.0f;
-
-    Mesh mesh(vertices, NUM_TRIANGLES * 9);
+    Cube cube;
 
 
 
     while(!glfwWindowShouldClose(window)) {
+
+        unsigned int query;
+        glGenQueries(1, &query);
+
 
         auto frameStart = std::chrono::high_resolution_clock::now();    
 
         glClearColor(0.1f, 0.2f, 0.2f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
+
+        glBeginQuery(GL_TIME_ELAPSED, query);
+
         shader.use();
-        mesh.draw();
+        cube.draw();
+
+        glEndQuery(GL_TIME_ELAPSED);
 
         glfwSwapBuffers(window);
         glfwPollEvents();
@@ -58,8 +63,18 @@ int main() {
         auto frameEnd = std::chrono::high_resolution_clock::now();
         std::chrono::duration<float, std::milli> frameTime = frameEnd - frameStart; 
 
-        float fps = 1000.0f / frameTime.count();
-        std::cout << "FPS: " << fps << std::endl; 
+        GLuint64 gpuTime = 0;
+        glGetQueryObjectui64v(query, GL_QUERY_RESULT, &gpuTime);
+
+        float gpuMs = gpuTime / 1e6f;
+
+        float cpuFps = 1000.0f / frameTime.count();
+        float gpuFPS = 1000.0f / gpuMs;
+
+        std::cout << "CPU FPS: " << cpuFps 
+          << " | GPU Time: " << gpuFPS  
+          << std::endl;
+
 
     }
 

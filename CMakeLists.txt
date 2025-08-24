@@ -10,6 +10,8 @@ include_directories(
     third_party/glad/include
     third_party/glm
     src
+    src/shaders
+    src/mesh
 )
 
 add_executable(cube
